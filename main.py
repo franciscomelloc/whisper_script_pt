@@ -137,26 +137,26 @@ def transcribe(audio_array, sampling_rate, processor, model, device, forced_deco
         transcriptions (list of str): A lista de transcrições de texto para cada parte do áudio.
     """
 
-    # converte o array de áudio em partes de 30 segundos
-    
-    chunk_size = 30 * sampling_rate  # tamanho da parte em amostras
+    # convert audio array into chunks of 30 seconds
+    chunk_size = 30 * sampling_rate  # chunk size in samples
     chunks = [audio_array[i:i + chunk_size] for i in range(0, len(audio_array), chunk_size)]
 
     transcriptions = []
     for chunk in chunks:
-        # converte a amostra de áudio em recursos
+        # convert audio sample to features
         input_features = processor(chunk, 
                                    sampling_rate=sampling_rate, 
                                    return_tensors="pt").input_features.to(device)
 
-        # gera IDs de token previstos
+        # generate token ids
         predicted_ids = model.generate(input_features, forced_decoder_ids=forced_decoder_ids)
 
-        # decodifica os IDs de token em texto
+        # decode token ids to text
         transcription = processor.batch_decode(predicted_ids, skip_special_tokens=True)
-        transcriptions.append(transcription[0])  # adiciona a transcrição da parte atual à lista
-        
-    return transcriptions
+        if transcription[0].strip():  # check if the transcription is not empty
+            transcriptions.append(transcription[0])  # append the transcription of the current chunk to the list
+        print(transcriptions)
+    return ' '.join(transcriptions)
 
 def write_transcription_to_file(wav_file, transcription):
     
@@ -177,7 +177,7 @@ def write_transcription_to_file(wav_file, transcription):
     # escreve a transcrição em um arquivo .txt no diretório 'texts'
     txt_file = os.path.splitext(wav_file)[0] + '.txt'  # altera a extensão .wav para .txt
     with open(os.path.join("texts", txt_file), "w") as f:
-        f.write(transcription[0])  # a transcrição é uma lista com um único elemento de string
+        f.write(transcription)  # a transcrição é uma lista com um único elemento de string
 
     print(f"Transcription for {wav_file} written to {txt_file}")
 
@@ -204,8 +204,8 @@ def main():
         # lê o arquivo de áudio
         audio_array, sampling_rate = sf.read(os.path.join(directory_path, wav_file))
         audio_array, sampling_rate = resample_audio(audio_array, sampling_rate)
-        transcription = transcribe(audio_array, sampling_rate, processor, model, device, forced_decoder_ids)
-        write_transcription_to_file(wav_file, transcription)
+        all_transcription = transcribe(audio_array, sampling_rate, processor, model, device, forced_decoder_ids)
+        write_transcription_to_file(wav_file, all_transcription)
 
 if __name__ == "__main__":
     main()
