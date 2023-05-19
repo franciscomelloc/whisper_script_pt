@@ -1,4 +1,4 @@
-# whisper_script_pt
+# Whisper PT - Automação
 whisper_script_pt
 
 Este é um script que acessa arquivos de áudio em formato .wav e realiza a transcrição para português, gerando arquivos em .txt como produto. Para qualquer número de arquivos .wav na pasta 'audio', serão gerados arquivos .txt correspondentes na pasta .texts.
